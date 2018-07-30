@@ -1,0 +1,25 @@
+# Build Specification for AWS CodeBuild
+# https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+
+version: 0.1
+phases:
+  pre_build:
+    commands:
+    - "echo Logging in to Amazon ECR..."
+    - "$(aws ecr get-login --no-include-email --region us-east-1)"
+    - "echo Installing sbt..."
+    - "echo \"deb https://dl.bintray.com/sbt/debian /\" | tee -a /etc/apt/sources.list.d/sbt.list"
+    - "apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823"
+    - "apt-get update"
+    - "apt-get install sbt"
+  build:
+    commands:
+    - "echo Passing the tests..."
+    - "sbt test"
+    - "echo Building the Docker image..."
+    - "docker build -t subspace-backend ."
+    - "docker tag subspace-backend:latest 877899260343.dkr.ecr.us-east-2.amazonaws.com/subspace-backend:latest"
+  post_build:
+    commands:
+    - "echo Pushing the Docker image..."
+    - "docker push 877899260343.dkr.ecr.us-east-2.amazonaws.com/subspace-backend:latest"
